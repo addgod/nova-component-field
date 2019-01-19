@@ -1,0 +1,132 @@
+<template>
+    <div class="m-3">
+        <div class="card overflow-hidden border border-60">
+            <div class="border-b border-60 bg-40 p-4 mb-2">
+                <div class="flex">
+                    <h4 class="flex-1">{{ field.indexName }}</h4>
+                    <div class="flex-1 text-right">
+                        <button v-if="typeof index !== 'undefined'" @click="$emit('remove')" type="button" class="float-right hover:bg-grey-lightest text-grey-darkest font-semibold">
+                            <svg height="18px" id="Layer_1" style="enable-background:new 0 0 512 512;" version="1.1" viewBox="0 0 512 512" width="18px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                            <path d="M443.6,387.1L312.4,255.4l131.5-130c5.4-5.4,5.4-14.2,0-19.6l-37.4-37.6c-2.6-2.6-6.1-4-9.8-4c-3.7,0-7.2,1.5-9.8,4  L256,197.8L124.9,68.3c-2.6-2.6-6.1-4-9.8-4c-3.7,0-7.2,1.5-9.8,4L68,105.9c-5.4,5.4-5.4,14.2,0,19.6l131.5,130L68.4,387.1  c-2.6,2.6-4.1,6.1-4.1,9.8c0,3.7,1.4,7.2,4.1,9.8l37.4,37.6c2.7,2.7,6.2,4.1,9.8,4.1c3.5,0,7.1-1.3,9.8-4.1L256,313.1l130.7,131.1  c2.7,2.7,6.2,4.1,9.8,4.1c3.5,0,7.1-1.3,9.8-4.1l37.4-37.6c2.6-2.6,4.1-6.1,4.1-9.8C447.7,393.2,446.2,389.7,443.6,387.1z"/>
+                        </svg>
+                        </button>
+                    </div>
+
+                </div>
+
+            </div>
+            <component
+                v-for="(field, index) in fields"
+                :key="index"
+                :is="'form-' + field.component"
+                :errors="errors"
+                :resource-name="field.resourceName"
+                :field="field"
+                :index="index"
+                @remove="removeComponent(index)"
+            />
+            <p v-if="!fields.length" class="m-6 text-70">
+                {{ field.indexName }} is empty
+            </p>
+            <div class="py-6 px-8">
+                <button type="button" v-for="component in components" @click="addComponent(component)" class="bg-white hover:bg-grey-lightest text-grey-darkest font-semibold py-2 px-4 m-1 border border-grey-light rounded shadow">
+                    {{ component.indexName }}
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="#9babb4" class="pt-1">
+                        <title>add</title>
+                        <path d="M16 9h-5V4H9v5H4v2h5v5h2v-5h5V9z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+    import {FormField, HandlesValidationErrors} from 'laravel-nova';
+
+    export default {
+        mixins: [HandlesValidationErrors, FormField],
+
+        props: ['resourceName', 'resourceId', 'field', 'index'],
+
+        data() {
+            return {
+                fields: [],
+            };
+        },
+
+        mounted() {
+            if (this.field.value) {
+                _.each(this.field.value, (value, key) => {
+                    const field = _.cloneDeep(this.field.fields.find(field => field.attribute === key));
+                    if (field.component === this.field.component) {
+                        _.each(value, val => {
+                            field.value = val.valueOf();
+                        })
+                    } else {
+                        field.value = this.parseString(value);
+                    }
+                    this.addComponent(field);
+                });
+            } else {
+                _.each(this.field.fields, field => {
+                    if (field.component !== this.field.component) {
+                        this.addComponent(field);
+                    }
+                })
+            }
+        },
+
+        destroyed() {
+            const formData = new FormData;
+            _.each(this.fields, field => field.fill(formData));
+
+            for (const p of formData) {
+                console.log(p);
+            }
+        },
+
+        methods: {
+
+            /**
+             * Fill the given FormData object with the field's internal value.
+             */
+            fill(formData) {
+                formData.append(this.field.attribute, []);
+                _.each(this.fields, field => {
+                    if (field.component === this.field.component) {
+                        const index = this.fields.filter(f => f.attribute === field.attribute).indexOf(field);
+                        field.attribute = `${this.field.attribute}[${field.attribute}][${index}]`
+                    } else {
+                        field.attribute = `${this.field.attribute}[${field.attribute}]`
+                    }
+                    field.fill(formData);
+                });
+            },
+
+            addComponent(component) {
+                const clone = _.cloneDeep(component);
+                this.fields.push(clone);
+            },
+
+            removeComponent(index) {
+                this.fields.splice(index, 1);
+            },
+
+            parseString(value) {
+                try {
+                    return JSON.parse(value);
+                }
+                catch(e){
+                    return value.toString();
+                }
+            },
+        },
+
+        computed: {
+            components() {
+                return this.field.fields.filter(field => field.component === this.field.component)
+            }
+        }
+    };
+</script>
