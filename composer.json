@@ -1,6 +1,6 @@
 {
     "name": "addgod/component-field",
-    "description": "A Laravel Nova field.",
+    "description": "A Laravel nova field, that can be used to generate json, based on any nova compatible fields.",
     "keywords": [
         "laravel",
         "nova"
