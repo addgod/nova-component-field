@@ -2,6 +2,7 @@
 
 namespace Addgod\ComponentField;
 
+use Illuminate\Support\Str;
 use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Http\Requests\NovaRequest;
 
@@ -27,6 +28,27 @@ class ComponentField extends Field
      * @var array
      */
     private $fields = [];
+
+    /**
+     * The internal identifier for this component. It will be based on the $name parameter.
+     *
+     * @var
+     */
+    private $intl_slug;
+
+    /**
+     * ComponentField constructor.
+     *
+     * @param      $name
+     * @param null $attribute
+     * @param null $resolveCallback
+     */
+    public function __construct($name, $attribute = null, $resolveCallback = null)
+    {
+        parent::__construct($name, $attribute, $resolveCallback);
+
+        $this->intl_slug = str_replace(' ', '_', Str::lower($name));
+    }
 
     /**
      * Set the fields, for this component.
@@ -102,7 +124,8 @@ class ComponentField extends Field
     public function meta()
     {
         return array_merge([
-            'fields' => collect($this->fields),
+            'fields'    => collect($this->fields),
+            'intl_slug' => $this->intl_slug,
         ], $this->meta);
     }
 }
