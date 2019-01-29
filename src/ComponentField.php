@@ -117,6 +117,20 @@ class ComponentField extends Field
     }
 
     /**
+     * Set the layout of the component fields to horizontal.
+     *
+     * @param bool $horizontal
+     *
+     * @return \Addgod\ComponentField\ComponentField
+     */
+    public function horizontal(bool $horizontal = true)
+    {
+        return $this->withMeta([
+            'horizontal' => $horizontal,
+        ]);
+    }
+
+    /**
      * Get additional meta information to merge with the field payload.
      *
      * @return array
@@ -128,4 +142,5 @@ class ComponentField extends Field
             'intl_slug' => $this->intl_slug,
         ], $this->meta);
     }
+
 }

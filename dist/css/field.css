@@ -1,0 +1,22 @@
+.horizontal .w-1\/5 {
+  width: 100% !important;
+}
+
+.horizontal .w-1\/2 {
+  width: 100% !important;
+}
+
+.horizontal .w-4\/5 {
+  width: 100% !important;
+}
+
+.horizontal .py-6 {
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
+}
+
+.horizontal .px-8 {
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+

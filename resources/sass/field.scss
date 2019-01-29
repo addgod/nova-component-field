@@ -1,1 +1,24 @@
 // Nova Tool CSS
+.horizontal {
+    .w-1\/5 {
+        width: 100% !important;
+    }
+
+    .w-1\/2 {
+        width: 100% !important;
+    }
+
+    .w-4\/5 {
+        width: 100% !important;
+    }
+
+    .py-6 {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+
+    .px-8 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+}

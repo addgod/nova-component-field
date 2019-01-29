@@ -13,30 +13,31 @@
                     </div>
                 </div>
             </div>
-            <component
-                v-for="(field, index) in fields"
-                :key="index"
-                :is="'form-' + field.component"
-                :errors="errors"
-                :resource-name="field.resourceName"
-                :field="field"
-            />
-            <div class="flex border-b border-40" v-for="(sections, attribute) in content">
-                <div class="flex-shrink py-4 px-6">
+            <div class="flex" :class="outerClass">
+                <component
+                    v-for="(field, index) in fields"
+                    :key="index"
+                    :is="'form-' + field.component"
+                    :errors="errors"
+                    :resource-name="field.resourceName"
+                    :field="field"
+                    :class="innerClass"
+                />
+            </div>
+            <div class="flex flex-col border-b border-40" v-for="(sections, attribute) in content">
+                <div class="px-4">
                     <label class="inline-block text-80 pt-2 leading-tight">{{ attribute | capitalize }}</label>
                 </div>
-                <div class="flex-grow py-4 px-6">
-                    <component
-                        v-for="(block, index) in sections"
-                        :key="index"
-                        :is="'form-' + block.component"
-                        :errors="errors"
-                        :resource-name="block.resourceName"
-                        :field="block"
-                        :index="index"
-                        @remove="removeBlock(attribute, index)"
-                    />
-                </div>
+                <component
+                    v-for="(block, index) in sections"
+                    :key="index"
+                    :is="'form-' + block.component"
+                    :errors="errors"
+                    :resource-name="block.resourceName"
+                    :field="block"
+                    :index="index"
+                    @remove="removeBlock(attribute, index)"
+                />
             </div>
             <div class="py-4 px-6">
                 <button type="button" v-for="component in components" @click="addBlock(component)" class="bg-white hover:bg-grey-lightest text-grey-darkest font-semibold py-2 px-4 m-1 border border-grey-light rounded shadow">
@@ -121,18 +122,31 @@
 
         computed: {
             components() {
+                console.log(this.field)
                 return this.field.fields.filter(field => field.component === this.field.component)
             },
 
             fields() {
                 return this.field.fields.filter(field => field.component !== this.field.component)
+            },
+
+            innerClass() {
+                return {
+                    'flex-col flex-grow horizontal': this.field.horizontal,
+                };
+            },
+
+            outerClass() {
+                return {
+                    'flex-col': !this.field.horizontal,
+                }
             }
         },
 
         filters: {
             capitalize: function (value) {
-                if (!value) return ''
-                value = value.toString()
+                if (!value) return '';
+                value = value.toString();
                 return value.charAt(0).toUpperCase() + value.slice(1)
             }
         }
