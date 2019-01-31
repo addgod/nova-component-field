@@ -71,13 +71,49 @@ class ComponentField extends Field
      *
      * @return array
      */
-    protected function generateRules(array $rules)
+    protected function generateArrayRules(array $rules)
     {
         return collect($rules)->mapWithKeys(function ($rules, $key) {
-            array_unshift($rules, 'sometimes');
 
             return [$this->attribute . '.*.' . $key => $rules];
         })->toArray();
+    }
+
+    /**
+     * Generate field-specific validation rules.
+     *
+     * @param  array $rules
+     *
+     * @return array
+     */
+    protected function generateNestedRules(array $rules)
+    {
+        return collect($rules)->mapWithKeys(function ($rules, $key) {
+
+            return [$this->attribute . '.' . $key => $rules];
+        })->toArray();
+    }
+
+    /**
+     * Get the validation rules for this field.
+     *
+     * @param  \Laravel\Nova\Http\Requests\NovaRequest $request
+     *
+     * @return array
+     */
+    public function getRules(NovaRequest $request)
+    {
+        $result = [];
+        foreach ($this->fields as $field) {
+            if ($field instanceof $this) {
+                $rules = $this->generateArrayRules($field->getRules($request));
+            } else {
+                $rules = $this->generateNestedRules($field->getRules($request));
+            }
+            $result = array_merge_recursive($result, $rules);
+        }
+
+        return $result;
     }
 
     /**
@@ -91,7 +127,11 @@ class ComponentField extends Field
     {
         $result = [];
         foreach ($this->fields as $field) {
-            $rules = $this->generateRules($field->getCreationRules($request));
+            if ($field instanceof $this) {
+                $rules = $this->generateNestedRules($field->getCreationRules($request));
+            } else {
+                $rules = $this->generateArrayRules($field->getCreationRules($request));
+            }
             $result = array_merge_recursive($result, $rules);
         }
 
@@ -109,7 +149,11 @@ class ComponentField extends Field
     {
         $result = [];
         foreach ($this->fields as $field) {
-            $rules = $this->generateRules($field->getUpdateRules($request));
+            if ($field instanceof $this) {
+                $rules = $this->generateNestedRules($field->getUpdateRules($request));
+            } else {
+                $rules = $this->generateArrayRules($field->getUpdateRules($request));
+            }
             $result = array_merge_recursive($result, $rules);
         }
 
@@ -123,7 +167,7 @@ class ComponentField extends Field
      *
      * @return \Addgod\ComponentField\ComponentField
      */
-    public function horizontal(bool $horizontal = true)
+    public function horizontal($horizontal = true)
     {
         return $this->withMeta([
             'horizontal' => $horizontal,

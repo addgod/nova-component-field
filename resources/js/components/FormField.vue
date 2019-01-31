@@ -18,7 +18,7 @@
                     v-for="(field, index) in fields"
                     :key="index"
                     :is="'form-' + field.component"
-                    :errors="errors"
+                    :errors="sanitizedErrors"
                     :resource-name="field.resourceName"
                     :field="field"
                     :class="innerClass"
@@ -32,7 +32,7 @@
                     v-for="(block, index) in sections"
                     :key="index"
                     :is="'form-' + block.component"
-                    :errors="errors"
+                    :errors="sanitizedErrors"
                     :resource-name="block.resourceName"
                     :field="block"
                     :index="index"
@@ -54,12 +54,13 @@
 
 <script>
     import {FormField, HandlesValidationErrors} from 'laravel-nova';
-    import Vue from 'vue'
+    import { Errors } from 'form-backend-validation'
+    import Vue from 'vue';
 
     export default {
         mixins: [HandlesValidationErrors, FormField],
 
-        props: ['resourceName', 'resourceId', 'field', 'index'],
+        props: ['resourceName', 'resourceId', 'field', 'index', 'errors'],
 
         data() {
             return {
@@ -83,7 +84,9 @@
             });
 
             _.each(this.fields, field => {
-                field.value = this.field.value ? this.field.value[field.attribute] : null;
+                const { attribute } = field;
+                field.attribute = `${this.field.attribute}[${attribute}]`;
+                field.value = this.field.value ? this.field.value[attribute] : null;
             });
         },
 
@@ -95,12 +98,10 @@
             fill(formData) {
                 formData.append(this.field.attribute, []);
                 _.each(this.fields, field  => {
-                    field.attribute = `${this.field.attribute}[${field.attribute}]`;
                     field.fill(formData)
                 });
-                _.each(this.content, (sections, attribute) => {
-                    _.each(sections, (block, index) => {
-                        block.attribute = `${this.field.attribute}[${attribute}][${index}]`;
+                _.each(this.content, (sections) => {
+                    _.each(sections, (block) => {
                         block.fill(formData);
                         formData.append(`${block.attribute}[component]`, block.intl_slug);
                     });
@@ -110,7 +111,8 @@
             addBlock(block, value = null) {
                 const clone = _.cloneDeep(block);
                 clone.value = value;
-                this.content[clone.attribute].push(clone);
+                clone.attribute = `${this.field.attribute}[${block.attribute}][${this.content[block.attribute].length}]`;
+                this.content[block.attribute].push(clone);
                 this.$forceUpdate();
             },
 
@@ -122,7 +124,6 @@
 
         computed: {
             components() {
-                console.log(this.field)
                 return this.field.fields.filter(field => field.component === this.field.component)
             },
 
@@ -140,6 +141,28 @@
                 return {
                     'flex-col': !this.field.horizontal,
                 }
+            },
+
+            sanitizedErrors() {
+                const errors = {};
+                _.each(this.errors.errors, (messages, key) => {
+                    const blocks = key.split('.');
+                    let attribute = blocks.shift();
+                    let name = blocks.slice(-1).pop();
+                    _.each(blocks, block => {
+                        attribute += `[${block}]`;
+                    });
+
+                    _.each(messages, (message, index) => {
+                            messages[index] = message.replace(key, name)
+                    });
+
+                    errors[attribute] = messages;
+                });
+
+                console.log(errors);
+
+                return new Errors(errors);
             }
         },
 
