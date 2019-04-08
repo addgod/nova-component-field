@@ -19,7 +19,7 @@
                     :key="index"
                     :is="'form-' + field.component"
                     :errors="sanitizedErrors"
-                    :resource-name="field.resourceName"
+                    :resource-name="resourceName"
                     :field="field"
                     :class="innerClass"
                 />
@@ -33,7 +33,7 @@
                     :key="index"
                     :is="'form-' + block.component"
                     :errors="sanitizedErrors"
-                    :resource-name="block.resourceName"
+                    :resource-name="resourceName"
                     :field="block"
                     :index="index"
                     @remove="removeBlock(attribute, index)"
@@ -66,6 +66,10 @@
             return {
                 content: {},
             };
+        },
+
+        mounted() {
+            console.log(this.resourceName, 'ComponentField');
         },
 
         beforeMount() {
@@ -159,8 +163,6 @@
 
                     errors[attribute] = messages;
                 });
-
-                console.log(errors);
 
                 return new Errors(errors);
             }
