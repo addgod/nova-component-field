@@ -120,7 +120,7 @@
                     }
                 });
 
-                return count > section.limit;
+                return count < section.limit;
             },
 
             addSection(section) {
