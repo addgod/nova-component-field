@@ -92,10 +92,10 @@ class ComponentField extends Field
         $model->{$attribute} = $order->map(function ($id) use ($request, $requestAttribute) {
             $values = new stdClass();
             $section = collect($this->sections)->first(function ($section) use ($request, $id, $requestAttribute) {
-                return $request->get("{$requestAttribute}->{$id}->attribute") === $section['attribute'];
+                return data_get($request, "{$requestAttribute}.{$id}.attribute") === $section['attribute'];
             });
             collect($section['fields'])->each(function ($field) use ($id, $request, $requestAttribute, $values) {
-                $fieldRequestAttribute = "{$requestAttribute}->{$id}->fields->{$field->attribute}";
+                $fieldRequestAttribute = "{$requestAttribute}.{$id}.fields.{$field->attribute}";
                 $field->fillInto($request, $values, $field->attribute, $fieldRequestAttribute);
             });
 
@@ -147,7 +147,7 @@ class ComponentField extends Field
     {
         return collect($rules)->mapWithKeys(function ($rules, $key) use ($section) {
 
-            return [$this->attribute . '.*.block.*.' . $key => $rules];
+            return [$this->attribute . '.*.fields.' . $key => $rules];
         })->toArray();
     }
 

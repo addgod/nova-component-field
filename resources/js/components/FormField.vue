@@ -102,7 +102,7 @@
             fill(formData) {
                 _.each(this.order, (id, index) => formData.append(`${this.field.attribute}_order[${index}]`, id));
                 _.each(this.orderedSections, section => {
-                    formData.append(`${this.field.attribute}->${section.id}->attribute`, section.attribute);
+                    formData.append(`${this.field.attribute}[${section.id}][attribute]`, section.attribute);
                     _.each(section.fields, field => {
                         field.fill(formData);
                     })
@@ -127,7 +127,7 @@
                 section = JSON.parse(JSON.stringify(section));
                 const id = '_' + Math.random().toString(36).substr(2, 9);
                 section.fields = _.map(section.fields, field => {
-                    field.attribute = `${this.field.attribute}->${id}->fields->${field.attribute}`;
+                    field.attribute = `${this.field.attribute}[${id}][fields][${field.attribute}]`;
 
                     return field;
                 });
