@@ -1,61 +1,70 @@
 <template>
-    <div class="m-3">
-        <div class="card overflow-hidden border border-60">
-            <div class="border-b border-60 bg-40 p-4 mb-2">
-                <div class="flex">
-                    <h4 class="flex-1">{{ field.indexName }}</h4>
-                    <div class="flex-1 text-right">
-                        <button v-if="index > -1" @click="$emit('remove')" type="button" class="float-right hover:bg-grey-lightest text-grey-darkest font-semibold">
-                            <svg height="18px" id="Layer_1" style="enable-background:new 0 0 512 512;" version="1.1" viewBox="0 0 512 512" width="18px" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-                        <path d="M443.6,387.1L312.4,255.4l131.5-130c5.4-5.4,5.4-14.2,0-19.6l-37.4-37.6c-2.6-2.6-6.1-4-9.8-4c-3.7,0-7.2,1.5-9.8,4  L256,197.8L124.9,68.3c-2.6-2.6-6.1-4-9.8-4c-3.7,0-7.2,1.5-9.8,4L68,105.9c-5.4,5.4-5.4,14.2,0,19.6l131.5,130L68.4,387.1  c-2.6,2.6-4.1,6.1-4.1,9.8c0,3.7,1.4,7.2,4.1,9.8l37.4,37.6c2.7,2.7,6.2,4.1,9.8,4.1c3.5,0,7.1-1.3,9.8-4.1L256,313.1l130.7,131.1  c2.7,2.7,6.2,4.1,9.8,4.1c3.5,0,7.1-1.3,9.8-4.1l37.4-37.6c2.6-2.6,4.1-6.1,4.1-9.8C447.7,393.2,446.2,389.7,443.6,387.1z"/>
-                    </svg>
+    <default-field :field="field" :errors="errors" :fullWidthContent="true">
+        <template slot="field">
+            <div class="relative flex bg-white mb-4 pb-1" v-for="section in orderedSections" :key="section.id">
+                <div class="z-10 bg-white border-t border-l border-b border-60 h-auto pin-l pin-t rounded-l self-start w-8">
+                    <div>
+                        <button v-if="!collapsed" type="button" title="Collapse" class="group-control btn border-r border-40 w-8 h-8 block text-70 hover:text-80" @click="section.collapsed = !section.collapsed">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" class="fill-current align-top">
+                                <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2zm0 2v14h14V5H5zm11 7a1 1 0 0 1-1 1H9a1 1 0 0 1 0-2h6a1 1 0 0 1 1 1z" />
+                            </svg>
+                        </button>
+                        <button v-if="collapsed" type="button" title="Expand" class="group-control btn border-r border-40 w-8 h-8 block text-70 hover:text-80" @click="section.collapsed = !section.collapsed">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" class="fill-current align-top">
+                                <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2zm0 2v14h14V5H5zm8 6h2a1 1 0 0 1 0 2h-2v2a1 1 0 0 1-2 0v-2H9a1 1 0 0 1 0-2h2V9a1 1 0 0 1 2 0v2z" />
+                            </svg>
+                        </button>
+                        <button type="button" title="Move up" class="group-control btn border-t border-r border-40 w-8 h-8 block text-70 hover:text-80" :class="collapsedClass(section)" @click="moveUp(section)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 8 4.8" class="fill-current">
+                                <path d="M1.3,4.5C1,4.8,0.5,4.8,0.2,4.5s-0.3-0.8,0-1.1l3.2-3.2c0.3-0.3,0.8-0.3,1.1,0l3.2,3.1C8,3.6,8,4.1,7.7,4.4c-0.3,0.3-0.8,0.3-1.1,0L3.9,1.8L1.3,4.5z" />
+                            </svg>
+                        </button>
+                        <button type="button" title="Move down" class="group-control btn border-t border-r border-40 w-8 h-8 block text-70 hover:text-80" :class="collapsedClass(section)" @click="moveDown(section)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 8 4.8" class="fill-current">
+                                <path d="M6.6,0.2c0.3-0.3,0.8-0.3,1.1,0C8,0.5,8,1,7.7,1.3L4.5,4.5c-0.3,0.3-0.8,0.3-1.1,0L0.2,1.4c-0.3-0.3-0.3-0.8,0-1.1C0.5,0,1,0,1.3,0.3L4,2.9L6.6,0.2z" />
+                            </svg>
+                        </button>
+                        <button type="button" title="Delete" class="group-control btn border-t border-r border-40 w-8 h-8 block text-70 hover:text-80" :class="collapsedClass(section)" @click="removeSection(section)">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" class="fill-current">
+                                <path fill-rule="nonzero" d="M6 4V2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2h5a1 1 0 0 1 0 2h-1v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6H1a1 1 0 1 1 0-2h5zM4 6v12h12V6H4zm8-2V2H8v2h4zM8 8a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1zm4 0a1 1 0 0 1 1 1v6a1 1 0 0 1-2 0V9a1 1 0 0 1 1-1z" />
+                            </svg>
                         </button>
                     </div>
                 </div>
-            </div>
-            <div class="flex" :class="outerClass">
-                <component
-                    v-for="(field, index) in fields"
-                    :key="index"
-                    :is="'form-' + field.component"
-                    :errors="sanitizedErrors"
-                    :resource-name="resourceName"
-                    :field="field"
-                    :class="innerClass"
-                />
-            </div>
-            <div class="flex flex-col border-b border-40" v-for="(sections, attribute) in content">
-                <div class="px-4">
-                    <label class="inline-block text-80 pt-2 leading-tight">{{ attribute | capitalize }}</label>
+                <div class="flex flex-col min-h-full w-full">
+                    <div class="border border-60 rounded-tr-lg rounded-br-lg">
+                        <div class="leading-normal py-1 px-8 border-40" :class="collapsedTitleClass(section)">
+                            <p class="text-80">{{ section.name }}</p>
+                        </div>
+                        <div :class="collapsedClass(section)" style="padding-bottom: 2px">
+                            <component
+                                v-for="(field, index) in section.fields"
+                                :key="index"
+                                :is="'form-' + field.component"
+                                :errors="sanitizedErrors"
+                                :resource-name="resourceName"
+                                :field="field"
+                            />
+                        </div>
+                    </div>
                 </div>
-                <component
-                    v-for="(block, index) in sections"
-                    :key="index"
-                    :is="'form-' + block.component"
-                    :errors="sanitizedErrors"
-                    :resource-name="resourceName"
-                    :field="block"
-                    :index="index"
-                    @remove="removeBlock(attribute, index)"
-                />
             </div>
             <div class="py-4 px-6">
-                <button type="button" v-for="component in components" @click="addBlock(component)" class="bg-white hover:bg-grey-lightest text-grey-darkest font-semibold py-2 px-4 m-1 border border-grey-light rounded shadow">
-                    {{ component.indexName }}
+                <button type="button" v-for="section in field.sections" v-if="showSection(section)" @click="addSection(section)" class="bg-white hover:bg-grey-lightest text-grey-darkest font-semibold py-2 px-4 m-1 border border-grey-light rounded shadow">
+                    {{ section.name }}
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 20 20" fill="#9babb4" class="pt-1">
                         <title>add</title>
                         <path d="M16 9h-5V4H9v5H4v2h5v5h2v-5h5V9z"/>
                     </svg>
                 </button>
             </div>
-        </div>
-    </div>
+        </template>
+    </default-field>
 </template>
 
 <script>
     import {FormField, HandlesValidationErrors} from 'laravel-nova';
     import { Errors } from 'form-backend-validation'
-    import Vue from 'vue';
 
     export default {
         mixins: [HandlesValidationErrors, FormField],
@@ -64,34 +73,25 @@
 
         data() {
             return {
-                content: {},
+                sections: {},
+                order: [],
+                collapsed: false,
             };
-        },
-
-        mounted() {
-            console.log(this.resourceName, 'ComponentField');
         },
 
         beforeMount() {
 
-            _.each(this.components, component => {
-                Vue.set(this.content, component.attribute, [])
-            });
-
-            _.each(this.field.value, (value, attribute) => {
-                if (this.content.hasOwnProperty(attribute)) {
-                    _.each(value, block => {
-                        const component = this.components.find(component => component.intl_slug === block.component);
-                        this.addBlock(component, block);
-                    })
-                }
-            });
-
-            _.each(this.fields, field => {
-                const { attribute } = field;
-                field.attribute = `${this.field.attribute}[${attribute}]`;
-                field.value = this.field.value ? this.field.value[attribute] : null;
-            });
+            if (this.field.value && this.field.value.length) {
+                _.each(this.field.value, section => {
+                    this.addSection(section);
+                });
+            } else {
+                _.each(this.field.sections, section => {
+                    if (section.limit === 1) {
+                        this.addSection(section);
+                    }
+                })
+            }
         },
 
         methods: {
@@ -100,51 +100,87 @@
              * Fill the given FormData object with the field's internal value.
              */
             fill(formData) {
-                formData.append(this.field.attribute, []);
-                _.each(this.fields, field  => {
-                    field.fill(formData)
-                });
-                _.each(this.content, (sections) => {
-                    _.each(sections, (block) => {
-                        block.fill(formData);
-                        formData.append(`${block.attribute}[component]`, block.intl_slug);
-                    });
-                });
+                _.each(this.order, (id, index) => formData.append(`${this.field.attribute}_order[${index}]`, id));
+                _.each(this.orderedSections, section => {
+                    formData.append(`${this.field.attribute}->${section.id}->attribute`, section.attribute);
+                    _.each(section.fields, field => {
+                        field.fill(formData);
+                    })
+                })
             },
 
-            addBlock(block, value = null) {
-                const clone = _.cloneDeep(block);
-                clone.value = value;
-                clone.attribute = `${this.field.attribute}[${block.attribute}][${this.content[block.attribute].length}]`;
-                this.content[block.attribute].push(clone);
-                this.$forceUpdate();
+            showSection(section) {
+                if (section.limit === 0) {
+                    return true;
+                }
+                let count = 0;
+                _.each(this.sections, s => {
+                    if (s.attribute === section.attribute) {
+                        count++
+                    }
+                });
+
+                return count > section.limit;
             },
 
-            removeBlock(attribute, index) {
-                this.content[attribute].splice(index, 1);
-                this.$forceUpdate();
+            addSection(section) {
+                section = JSON.parse(JSON.stringify(section));
+                const id = '_' + Math.random().toString(36).substr(2, 9);
+                section.fields = _.map(section.fields, field => {
+                    field.attribute = `${this.field.attribute}->${id}->fields->${field.attribute}`;
+
+                    return field;
+                });
+                this.order.push(id);
+                this.$set(section, 'id', id);
+                this.$set(section, 'collapsed', false);
+                this.$set(this.sections, id, section);
             },
+
+            removeSection(section) {
+                this.order.splice(this.order.indexOf(section.id), 1);
+                this.$delete(this.sections, section.id);
+            },
+
+            moveUp(section) {
+                let index = this.order.indexOf(section.id);
+                if (index <= 0) return;
+                this.order.splice(index - 1, 0, this.order.splice(index, 1)[0]);
+            },
+
+            moveDown(section) {
+                let index = this.order.indexOf(section.id);
+                if(index < 0 || index >= this.order.length - 1) return;
+                this.order.splice(index + 1, 0, this.order.splice(index, 1)[0]);
+            },
+
+            collapsedClass(section) {
+                return {
+                    'hidden': section.collapsed
+                }
+            },
+
+            collapsedTitleClass(section) {
+                return {
+                    'border-b' : !section.collapsed
+                }
+            }
+        },
+
+        filters: {
+            capitalize: function (value) {
+                if (!value) return '';
+                value = value.toString();
+                return value.charAt(0).toUpperCase() + value.slice(1)
+            }
         },
 
         computed: {
-            components() {
-                return this.field.fields.filter(field => field.component === this.field.component)
-            },
-
-            fields() {
-                return this.field.fields.filter(field => field.component !== this.field.component)
-            },
-
-            innerClass() {
-                return {
-                    'flex-col flex-grow horizontal': this.field.horizontal,
-                };
-            },
-
-            outerClass() {
-                return {
-                    'flex-col': !this.field.horizontal,
-                }
+            orderedSections() {
+                return this.order.reduce((sections, id) => {
+                    sections.push(this.sections[id]);
+                    return sections;
+                }, []);
             },
 
             sanitizedErrors() {
@@ -156,23 +192,12 @@
                     _.each(blocks, block => {
                         attribute += `[${block}]`;
                     });
-
                     _.each(messages, (message, index) => {
-                            messages[index] = message.replace(key, name)
+                        messages[index] = message.replace(key, name)
                     });
-
                     errors[attribute] = messages;
                 });
-
                 return new Errors(errors);
-            }
-        },
-
-        filters: {
-            capitalize: function (value) {
-                if (!value) return '';
-                value = value.toString();
-                return value.charAt(0).toUpperCase() + value.slice(1)
             }
         }
     };
