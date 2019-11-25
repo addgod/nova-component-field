@@ -100,7 +100,7 @@
              * Fill the given FormData object with the field's internal value.
              */
             fill(formData) {
-                _.each(this.order, (id, index) => formData.append(`${this.field.attribute}_order[${index}]`, id));
+                _.each(this.order, (id, index) => formData.append(`${this.field.attribute}[_order][${index}]`, id));
                 _.each(this.orderedSections, section => {
                     formData.append(`${this.field.attribute}[${section.id}][attribute]`, section.attribute);
                     _.each(section.fields, field => {
@@ -125,7 +125,7 @@
 
             addSection(section) {
                 section = JSON.parse(JSON.stringify(section));
-                const id = '_' + Math.random().toString(36).substr(2, 9);
+                const id = Math.random().toString(36).substr(2, 9);
                 section.fields = _.map(section.fields, field => {
                     field.attribute = `${this.field.attribute}[${id}][fields][${field.attribute}]`;
 
@@ -193,7 +193,8 @@
                         attribute += `[${block}]`;
                     });
                     _.each(messages, (message, index) => {
-                        messages[index] = message.replace(key, name)
+                        console.log(message, key, name);
+                        messages[index] = message.replace(key.replace('_', ' '), name.replace('_', ' '))
                     });
                     errors[attribute] = messages;
                 });

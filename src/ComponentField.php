@@ -88,12 +88,13 @@ class ComponentField extends Field
     public function fillInto(NovaRequest $request, $model, $attribute, $requestAttribute = null)
     {
         // Data needs to be resolved with the value of this field, and send to the component.....
-        $order = collect($request->get($requestAttribute . '_order'));
+        $order = collect(data_get($request, $requestAttribute . '._order', []));
         $model->{$attribute} = $order->map(function ($id) use ($request, $requestAttribute) {
             $values = new stdClass();
             $section = collect($this->sections)->first(function ($section) use ($request, $id, $requestAttribute) {
                 return data_get($request, "{$requestAttribute}.{$id}.attribute") === $section['attribute'];
             });
+
             collect($section['fields'])->each(function ($field) use ($id, $request, $requestAttribute, $values) {
                 $fieldRequestAttribute = "{$requestAttribute}.{$id}.fields.{$field->attribute}";
                 $field->fillInto($request, $values, $field->attribute, $fieldRequestAttribute);
@@ -136,22 +137,6 @@ class ComponentField extends Field
     }
 
     /**
-     * Generate field-specific validation rules.
-     *
-     * @param array $section
-     * @param array $rules
-     *
-     * @return array
-     */
-    protected function generateNestedRules(array $section, array $rules)
-    {
-        return collect($rules)->mapWithKeys(function ($rules, $key) use ($section) {
-
-            return [$this->attribute . '.*.fields.' . $key => $rules];
-        })->toArray();
-    }
-
-    /**
      * Get the validation rules for this field.
      *
      * @param \Laravel\Nova\Http\Requests\NovaRequest $request
@@ -160,16 +145,19 @@ class ComponentField extends Field
      */
     public function getRules(NovaRequest $request)
     {
-        $result = [];
+        $order = collect(data_get($request, $this->attribute . '._order'));
 
-        foreach ($this->sections as $section) {
-            foreach ($section['fields'] as $field) {
-                $rules = $this->generateNestedRules($section, $field->getRules($request));
-                $result = array_merge_recursive($result, $rules);
-            }
-        }
+        return $order->mapWithKeys(function ($id) use ($request) {
+            $section = collect($this->sections)->first(function ($section) use ($request, $id) {
+                return data_get($request, "{$this->attribute}.{$id}.attribute") === $section['attribute'];
+            });
 
-        return $result;
+            return collect($section['fields'])->mapWithKeys(function ($field) use ($request, $id) {
+                return collect($field->getRules($request))->mapWithKeys(function ($rules, $key) use ($id) {
+                    return ["{$this->attribute}.{$id}.fields.{$key}" => $rules];
+                })->toArray();
+            });
+        });
     }
 
     /**
@@ -181,15 +169,19 @@ class ComponentField extends Field
      */
     public function getCreationRules(NovaRequest $request)
     {
-        $result = [];
-        foreach ($this->sections as $section) {
-            foreach ($section['fields'] as $field) {
-                $rules = $this->generateNestedRules($section, $field->getCreationRules($request));
-                $result = array_merge_recursive($result, $rules);
-            }
-        }
+        $order = collect(data_get($request, $this->attribute . '._order'));
 
-        return $result;
+        return $order->mapWithKeys(function ($id) use ($request) {
+            $section = collect($this->sections)->first(function ($section) use ($request, $id) {
+                return data_get($request, "{$this->attribute}.{$id}.attribute") === $section['attribute'];
+            });
+
+            return collect($section['fields'])->mapWithKeys(function ($field) use ($request, $id) {
+                return collect($field->getCreationRules($request))->mapWithKeys(function ($rules, $key) use ($id) {
+                    return ["{$this->attribute}.{$id}.fields.{$key}" => $rules];
+                })->toArray();
+            });
+        });
     }
 
     /**
@@ -201,15 +193,19 @@ class ComponentField extends Field
      */
     public function getUpdateRules(NovaRequest $request)
     {
-        $result = [];
-        foreach ($this->sections as $section) {
-            foreach ($section['fields'] as $field) {
-                $rules = $this->generateNestedRules($section, $field->getUpdateRules($request));
-                $result = array_merge_recursive($result, $rules);
-            }
-        }
+        $order = collect(data_get($request, $this->attribute . '._order'));
 
-        return $result;
+        return $order->mapWithKeys(function ($id) use ($request) {
+            $section = collect($this->sections)->first(function ($section) use ($request, $id) {
+                return data_get($request, "{$this->attribute}.{$id}.attribute") === $section['attribute'];
+            });
+
+            return collect($section['fields'])->mapWithKeys(function ($field) use ($request, $id) {
+                return collect($field->getRules($request))->mapWithKeys(function ($rules, $key) use ($id) {
+                    return ["{$this->attribute}.{$id}.fields.{$key}" => $rules];
+                })->toArray();
+            });
+        });
     }
 
     /**
