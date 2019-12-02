@@ -87,6 +87,8 @@ class ComponentField extends Field
      */
     public function fillInto(NovaRequest $request, $model, $attribute, $requestAttribute = null)
     {
+        $requestAttribute = $requestAttribute ?? $this->attribute;
+
         // Data needs to be resolved with the value of this field, and send to the component.....
         $order = collect(data_get($request, $requestAttribute . '._order', []));
         $model->{$attribute} = $order->map(function ($id) use ($request, $requestAttribute) {
@@ -115,17 +117,22 @@ class ComponentField extends Field
      *
      * @return mixed
      */
-    public function resolveAttribute($resource, $attribute)
+    public function resolve($resource, $attribute = null)
     {
-        $sections = collect($this->sections);
-        $data = collect(data_get($resource, str_replace('->', '.', $attribute)));
+        $attribute = $attribute ?? $this->attribute;
 
-        return $data->map(function ($sectionsData) use ($sections) {
+        $sections = collect($this->sections);
+
+        parent::resolve($resource, $attribute);
+
+        $this->value = empty($this->value) ? [] : $this->value;
+
+        $this->value = collect($this->value)->map(function ($sectionsData) use ($sections) {
             $section = $sections->first(function ($section) use ($sectionsData) {
                 return $section['attribute'] === $sectionsData['attribute'];
             });
 
-            $section['fields'] = collect($section['fields'])->map(function ($field) use ($sectionsData) {
+            $section['fields'] = collect($section['fields'])->map(function ($field, $attribute) use ($sectionsData) {
                 $resolvedField = clone $field;
                 $resolvedField->resolve($sectionsData['fields']);
 
